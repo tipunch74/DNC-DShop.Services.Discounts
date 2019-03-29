@@ -6,6 +6,7 @@ using Consul;
 using DShop.Common;
 using DShop.Common.Consul;
 using DShop.Common.Dispatchers;
+using DShop.Common.Jaeger;
 using DShop.Common.Mongo;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -17,7 +18,9 @@ using DShop.Common.RestEase;
 using DShop.Services.Discounts.Domain;
 using DShop.Services.Discounts.Messages.Commands;
 using DShop.Services.Discounts.Messages.Events;
+using DShop.Services.Discounts.Metrics;
 using DShop.Services.Discounts.Services;
+using OpenTracing;
 
 namespace DShop.Services.Discounts
 {
@@ -36,10 +39,12 @@ namespace DShop.Services.Discounts
             services.AddCustomMvc();
             services.AddInitializers(typeof(IMongoDbInitializer));
             services.AddConsul();
+            services.AddJaeger();
             services.RegisterServiceForwarder<IOrdersService>("orders-service");
+            services.AddTransient<IMetricsRegistry, MetricsRegistry>();
 
             var builder = new ContainerBuilder();
-            builder.RegisterAssemblyTypes(Assembly.GetEntryAssembly())
+            builder.RegisterAssemblyTypes(typeof(Startup).Assembly)
                 .AsImplementedInterfaces();
             builder.Populate(services);
             builder.AddDispatchers();
